@@ -1,49 +1,32 @@
 # syntax=docker/dockerfile:1
 
-ARG GLUETUN_VERSION=v3.41.3
-
-FROM --platform=$TARGETPLATFORM qmcgaw/gluetun:${GLUETUN_VERSION} AS upstream
-
 FROM alpine:3.17.10
 
-ARG GLUETUN_VERSION=v3.41.3
-ARG EX4100_REVISION=r2
-
-LABEL org.opencontainers.image.title="Gluetun for WD My Cloud EX4100" \
-      org.opencontainers.image.description="Gluetun ARMv7 runtime adapted for WD My Cloud EX4100" \
-      org.opencontainers.image.source="https://github.com/dart998/gluetun-wd-ex4100" \
-      org.opencontainers.image.version="${GLUETUN_VERSION}-ex4100-${EX4100_REVISION}"
+LABEL org.opencontainers.image.title="OpenVPN client for WD My Cloud EX4100" \
+      org.opencontainers.image.description="Minimal ARMv7 OpenVPN gateway for WD My Cloud EX4100" \
+      org.opencontainers.image.source="https://github.com/dart998/openvpn-ex4100"
 
 RUN apk add --no-cache \
       ca-certificates \
+      iproute2 \
       iptables \
       openvpn \
+      tini \
       tzdata \
-    && mv /usr/sbin/openvpn /usr/sbin/openvpn2.5 \
     && update-ca-certificates \
-    && mkdir -p /gluetun/wireguard
-
-COPY --from=upstream /gluetun-entrypoint /gluetun-entrypoint
-
-RUN chmod 0755 /gluetun-entrypoint \
+    && mkdir -p /config \
     && /sbin/iptables --version \
     && /sbin/iptables-legacy --version \
-    && /usr/sbin/openvpn2.5 --version | head -n 1 \
+    && openvpn --version | head -n 1 \
     && grep -Fx '3.17.10' /etc/alpine-release
 
-ENV VPN_SERVICE_PROVIDER=custom \
-    VPN_TYPE=wireguard \
-    VPN_INTERFACE=tun0 \
-    OPENVPN_VERSION=2.5 \
-    WIREGUARD_IMPLEMENTATION=userspace \
-    WIREGUARD_GSO=off \
-    PPROF_ENABLED=no \
-    PPROF_BLOCK_PROFILE_RATE=0 \
-    PPROF_MUTEX_PROFILE_RATE=0 \
-    PPROF_HTTP_SERVER_ADDRESS=:6060 \
-    TZ=Europe/Madrid
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT ["/gluetun-entrypoint"]
+ENV TZ=Europe/Madrid \
+    OVPN_CONFIG=/config/client.ovpn \
+    OVPN_AUTH=/config/auth.txt \
+    LAN_SUBNET=192.168.178.0/24 \
+    KILLSWITCH=on
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \
-  CMD /gluetun-entrypoint healthcheck || exit 1
+ENTRYPOINT ["/sbin/tini","--","/usr/local/bin/entrypoint.sh"]
