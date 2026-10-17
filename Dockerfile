@@ -19,6 +19,7 @@ RUN apk add --no-cache \
       iptables \
       openvpn \
       tzdata \
+    && mv /usr/sbin/openvpn /usr/sbin/openvpn2.5 \
     && update-ca-certificates \
     && mkdir -p /gluetun/wireguard
 
@@ -27,11 +28,13 @@ COPY --from=upstream /gluetun-entrypoint /gluetun-entrypoint
 RUN chmod 0755 /gluetun-entrypoint \
     && /sbin/iptables --version \
     && /sbin/iptables-legacy --version \
+    && /usr/sbin/openvpn2.5 --version | head -n 1 \
     && grep -Fx '3.17.10' /etc/alpine-release
 
 ENV VPN_SERVICE_PROVIDER=custom \
     VPN_TYPE=wireguard \
     VPN_INTERFACE=tun0 \
+    OPENVPN_VERSION=2.5 \
     WIREGUARD_IMPLEMENTATION=userspace \
     WIREGUARD_GSO=off \
     PPROF_ENABLED=no \
