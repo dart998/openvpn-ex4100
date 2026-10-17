@@ -10,7 +10,7 @@ on:
       revision:
         description: EX4100 compatibility revision
         required: true
-        default: "r1"
+        default: "r2"
       force:
         description: Rebuild even when the repository tag already exists
         required: true
@@ -52,7 +52,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_GLUETUN_TAG: ${{ github.event.inputs.gluetun_tag || '' }}
-          INPUT_REVISION: ${{ github.event.inputs.revision || 'r1' }}
+          INPUT_REVISION: ${{ github.event.inputs.revision || 'r2' }}
           FORCE_BUILD: ${{ github.event.inputs.force || 'false' }}
         run: |
           set -euo pipefail
@@ -139,6 +139,8 @@ jobs:
             set -eu
             grep -Fx "3.17.10" /etc/alpine-release
             test -x /gluetun-entrypoint
+            test -x /usr/sbin/openvpn2.5
+            /usr/sbin/openvpn2.5 --version | head -n 1
             iptables --version
             iptables-legacy --version
           '
