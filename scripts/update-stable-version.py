@@ -9,17 +9,18 @@ if len(sys.argv) != 2:
 repo_tag = sys.argv[1]
 image = f"ovelayos/gluetun-wd-ex4100:{repo_tag}"
 
-compose = Path("compose/portainer-stack.yml")
-text = compose.read_text()
-text, n = re.subn(
-    r"ovelayos/gluetun-wd-ex4100:[A-Za-z0-9._-]+",
-    image,
-    text,
-    count=1,
-)
-if n != 1:
-    raise SystemExit("could not update compose image")
-compose.write_text(text)
+for compose_path in ("docker-compose.yml", "compose/portainer-stack.yml"):
+    compose = Path(compose_path)
+    text = compose.read_text()
+    text, n = re.subn(
+        r"ovelayos/gluetun-wd-ex4100:[A-Za-z0-9._-]+",
+        image,
+        text,
+        count=1,
+    )
+    if n != 1:
+        raise SystemExit(f"could not update compose image in {compose_path}")
+    compose.write_text(text)
 
 env = Path(".env.example")
 text = env.read_text()
