@@ -7,7 +7,7 @@ FROM --platform=$TARGETPLATFORM qmcgaw/gluetun:${GLUETUN_VERSION} AS upstream
 FROM alpine:3.17.10
 
 ARG GLUETUN_VERSION=v3.41.3
-ARG EX4100_REVISION=r1
+ARG EX4100_REVISION=r2
 
 LABEL org.opencontainers.image.title="Gluetun for WD My Cloud EX4100" \
       org.opencontainers.image.description="Gluetun ARMv7 runtime adapted for WD My Cloud EX4100" \
@@ -34,6 +34,10 @@ ENV VPN_SERVICE_PROVIDER=custom \
     VPN_INTERFACE=tun0 \
     WIREGUARD_IMPLEMENTATION=userspace \
     WIREGUARD_GSO=off \
+    PPROF_ENABLED=no \
+    PPROF_BLOCK_PROFILE_RATE=0 \
+    PPROF_MUTEX_PROFILE_RATE=0 \
+    PPROF_HTTP_SERVER_ADDRESS=:6060 \
     TZ=Europe/Madrid
 
 ENTRYPOINT ["/gluetun-entrypoint"]
