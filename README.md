@@ -18,16 +18,18 @@ Current stable image: `ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r1`
 
 ## Portainer
 
-Use `compose/portainer-stack.yml` from `refs/heads/main`.
+Portainer can use the repository root directly because `docker-compose.yml` is present at the top level. A copy is also kept in `compose/portainer-stack.yml`.
 
-The WireGuard configuration is intentionally **not** stored in this repository. The stack expects the NAS file:
+The WireGuard configuration is intentionally **not** stored in this repository. Put the configuration on the NAS at:
 
-`/mnt/HD/HD_a2/Public/gluetun/proton-es90.conf`
+`/mnt/HD/HD_a2/Public/gluetun/wireguard/wg0.conf`
 
-and mounts it inside Gluetun as:
+The stack mounts that file inside Gluetun as:
 
 `/gluetun/wireguard/wg0.conf`
 
+Important: the host path must be an actual file. If it does not exist when Docker starts the stack, Docker may create a directory with that name and Gluetun will report `wg0.conf: is a directory`.
+
 ## Updating
 
-The GitHub Actions workflow checks upstream Gluetun releases, builds only `linux/arm/v7`, smoke-tests the image, publishes the EX4100 image to Docker Hub, updates the stable Portainer stack and optionally calls the Portainer webhook.
+The GitHub Actions workflow checks upstream Gluetun releases, builds only `linux/arm/v7`, smoke-tests the image, publishes the EX4100 image to Docker Hub, updates both stable Portainer stack files and optionally calls the Portainer webhook.

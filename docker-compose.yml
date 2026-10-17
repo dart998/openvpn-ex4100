@@ -22,4 +22,4 @@ services:
       FIREWALL_OUTBOUND_SUBNETS: ${LAN_SUBNET:-192.168.178.0/24}
 
     volumes:
-      - ${WIREGUARD_CONFIG_PATH:-/mnt/HD/HD_a2/Public/gluetun/proton-es90.conf}:/gluetun/wireguard/wg0.conf:ro
+      - ${WIREGUARD_CONFIG_PATH:-/mnt/HD/HD_a2/Public/gluetun/wireguard/wg0.conf}:/gluetun/wireguard/wg0.conf:ro
