@@ -7,6 +7,10 @@ services:
     hostname: ${OPENVPN_HOSTNAME:-openvpn-proton}
     restart: unless-stopped
 
+    ports:
+      - "8090:8080"
+      - "8091:8081"
+
     cap_add:
       - NET_ADMIN
 
