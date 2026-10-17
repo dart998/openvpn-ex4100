@@ -1,35 +1,70 @@
-# Gluetun for WD My Cloud EX4100
+# openvpn-ex4100
 
-Custom ARMv7 Gluetun image for WD My Cloud EX4100 systems where the official image's Alpine/iptables userspace crashes with `segmentation fault` on the WD kernel.
+Cliente OpenVPN ARMv7 mínimo para WD My Cloud EX4100.
 
-## Target
+Diseñado para funcionar en el kernel limitado del EX4100 sin depender de `ip rule` ni policy routing.
 
-- WD My Cloud EX4100
-- Linux `4.14.22-armada-18.09.3`
-- `armv7l`
-- Docker / Portainer CE
-- Docker Hub image: `ovelayos/gluetun-wd-ex4100`
+## Características
 
-## Compatibility approach
+- Alpine 3.17.10
+- OpenVPN 2.5.x
+- ARMv7
+- `/dev/net/tun`
+- `NET_ADMIN`
+- IPv4
+- Ruta LAN clásica, sin `ip rule`
+- Compatible con configuraciones `.ovpn` de Proton VPN
 
-The image takes the statically built Gluetun entrypoint from the selected upstream stable release and runs it on Alpine `3.17.10` with the older iptables/iptables-legacy userspace known to be compatible with this NAS generation.
+## Archivos en el NAS
 
-Current stable image: `ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r2`
+Crear:
+
+```text
+/mnt/HD/HD_a2/Public/openvpn-ex4100/
+```
+
+Dentro:
+
+```text
+client.ovpn
+auth.txt
+```
+
+`client.ovpn` es la configuración OpenVPN descargada del proveedor.
+
+`auth.txt` debe contener dos líneas:
+
+```text
+USUARIO_OPENVPN
+CONTRASEÑA_OPENVPN
+```
+
+No usar las credenciales normales de la cuenta Proton; usar las credenciales específicas de OpenVPN.
 
 ## Portainer
 
-Portainer can use the repository root directly because `docker-compose.yml` is present at the top level. A copy is also kept in `compose/portainer-stack.yml`.
+Usar el stack:
 
-The WireGuard configuration is intentionally **not** stored in this repository. Put the configuration on the NAS at:
+```text
+compose/portainer-stack.yml
+```
 
-`/mnt/HD/HD_a2/Public/gluetun/wireguard/wg0.conf`
+La imagen por defecto es:
 
-The stack mounts that file inside Gluetun as:
+```text
+ovelayos/openvpn-ex4100:1.0.0
+```
 
-`/gluetun/wireguard/wg0.conf`
+## Compartir la VPN con otro contenedor
 
-Important: the host path must be an actual file. If it does not exist when Docker starts the stack, Docker may create a directory with that name and Gluetun will report `wg0.conf: is a directory`.
+Un contenedor que deba usar la VPN puede compartir el namespace de red del cliente OpenVPN:
 
-## Updating
+```yaml
+network_mode: "container:openvpn-proton"
+```
 
-The GitHub Actions workflow checks upstream Gluetun releases, builds only `linux/arm/v7`, smoke-tests the image, publishes the EX4100 image to Docker Hub, updates both stable Portainer stack files and optionally calls the Portainer webhook.
+Los puertos que necesite ese contenedor deben publicarse en el contenedor OpenVPN, no en el contenedor cliente.
+
+## Limitaciones del EX4100
+
+El kernel del WD My Cloud EX4100 no soporta `ip rule`, por lo que este proyecto evita cualquier dependencia de policy routing.
