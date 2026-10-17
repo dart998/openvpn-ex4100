@@ -2,7 +2,7 @@ version: "2.4"
 
 services:
   openvpn:
-    image: ${OPENVPN_IMAGE:-ovelayos/openvpn-ex4100:1.0.1}
+    image: ${OPENVPN_IMAGE:-ovelayos/openvpn-ex4100:1.1.0}
     container_name: ${OPENVPN_CONTAINER_NAME:-openvpn-proton}
     hostname: ${OPENVPN_HOSTNAME:-openvpn-proton}
     restart: unless-stopped
