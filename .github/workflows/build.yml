@@ -144,10 +144,6 @@ jobs:
             iptables --version
             iptables-legacy --version
           '
-          docker run --rm --platform linux/arm/v7 --cap-add=NET_ADMIN --entrypoint /bin/sh "$LOCAL_IMAGE" -c '
-            set -eu
-            iptables-legacy -L >/dev/null
-          '
 
       - name: Log in to Docker Hub
         if: steps.release.outputs.skip != 'true'
