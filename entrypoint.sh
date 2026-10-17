@@ -30,21 +30,26 @@ if [ -z "$DEFAULT_GW" ] || [ -z "$DEFAULT_IF" ]; then
 fi
 
 RUNTIME_CONFIG=/tmp/client-runtime.ovpn
+RUNTIME_AUTH=/tmp/auth.txt
+
 awk '
   /^[[:space:]]*up[[:space:]]+.*update-resolv-conf/ { next }
   /^[[:space:]]*down[[:space:]]+.*update-resolv-conf/ { next }
   { print }
 ' "$OVPN_CONFIG" > "$RUNTIME_CONFIG"
 
+cp "$OVPN_AUTH" "$RUNTIME_AUTH"
+chmod 600 "$RUNTIME_AUTH"
+
 log "Ruta por defecto: gateway=$DEFAULT_GW interfaz=$DEFAULT_IF"
 log "LAN fuera de la VPN: $LAN_SUBNET"
-log "Configuración Proton preparada para Alpine"
+log "Configuración Proton preparada"
 
 ip -4 route replace "$LAN_SUBNET" via "$DEFAULT_GW" dev "$DEFAULT_IF"
 
 exec openvpn \
   --config "$RUNTIME_CONFIG" \
-  --auth-user-pass "$OVPN_AUTH" \
+  --auth-user-pass "$RUNTIME_AUTH" \
   --auth-nocache \
   --route "$LAN_SUBNET" net_gateway \
   --pull-filter ignore "route-ipv6" \
