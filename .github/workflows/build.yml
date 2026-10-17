@@ -1,120 +1,41 @@
-name: Build EX4100 Gluetun image
+name: Build OpenVPN EX4100 image
 
 on:
   workflow_dispatch:
-    inputs:
-      gluetun_tag:
-        description: Official Gluetun release tag; leave empty for latest stable
-        required: false
-        default: ""
-      revision:
-        description: EX4100 compatibility revision
-        required: true
-        default: "r2"
-      force:
-        description: Rebuild even when the repository tag already exists
-        required: true
-        type: boolean
-        default: false
   push:
     branches:
       - main
     paths:
       - "Dockerfile"
+      - "entrypoint.sh"
       - ".github/workflows/build.yml"
-      - "scripts/**"
   schedule:
     - cron: "27 4 * * *"
 
 permissions:
-  contents: write
-
-concurrency:
-  group: gluetun-ex4100-upstream-release
-  cancel-in-progress: false
+  contents: read
 
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
     env:
-      LOCAL_IMAGE: gluetun-wd-ex4100:test
-      DOCKERHUB_IMAGE: ovelayos/gluetun-wd-ex4100
+      LOCAL_IMAGE: openvpn-ex4100:test
+      RELEASE_IMAGE: ovelayos/openvpn-ex4100:1.0.0
+      LATEST_IMAGE: ovelayos/openvpn-ex4100:latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Resolve official Gluetun release
-        id: release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          INPUT_GLUETUN_TAG: ${{ github.event.inputs.gluetun_tag || '' }}
-          INPUT_REVISION: ${{ github.event.inputs.revision || 'r2' }}
-          FORCE_BUILD: ${{ github.event.inputs.force || 'false' }}
-        run: |
-          set -euo pipefail
-
-          GLUETUN_TAG="$INPUT_GLUETUN_TAG"
-          if [ -z "$GLUETUN_TAG" ]; then
-            GLUETUN_TAG="$(
-              curl -fsSL --retry 3 \
-                -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer ${GH_TOKEN}" \
-                -H "X-GitHub-Api-Version: 2022-11-28" \
-                https://api.github.com/repos/qdm12/gluetun/releases/latest \
-              | python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])'
-            )"
-          fi
-
-          if ! [[ "$GLUETUN_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Unsupported upstream tag: $GLUETUN_TAG" >&2
-            exit 1
-          fi
-
-          if ! [[ "$INPUT_REVISION" =~ ^r[0-9]+$ ]]; then
-            echo "Unsupported compatibility revision: $INPUT_REVISION" >&2
-            exit 1
-          fi
-
-          git ls-remote --exit-code --refs \
-            https://github.com/qdm12/gluetun.git \
-            "refs/tags/${GLUETUN_TAG}" >/dev/null
-
-          VERSION="${GLUETUN_TAG#v}"
-          REPO_TAG="${VERSION}-ex4100-${INPUT_REVISION}"
-          RELEASE_IMAGE="${DOCKERHUB_IMAGE}:${REPO_TAG}"
-
-          git fetch --tags --force
-          SKIP_BUILD=false
-          if git rev-parse -q --verify "refs/tags/${REPO_TAG}^{commit}" >/dev/null \
-            && [ "$FORCE_BUILD" != "true" ]; then
-            SKIP_BUILD=true
-          fi
-
-          echo "gluetun_tag=$GLUETUN_TAG" >> "$GITHUB_OUTPUT"
-          echo "repo_tag=$REPO_TAG" >> "$GITHUB_OUTPUT"
-          echo "skip=$SKIP_BUILD" >> "$GITHUB_OUTPUT"
-
-          echo "GLUETUN_TAG=$GLUETUN_TAG" >> "$GITHUB_ENV"
-          echo "REVISION=$INPUT_REVISION" >> "$GITHUB_ENV"
-          echo "REPO_TAG=$REPO_TAG" >> "$GITHUB_ENV"
-          echo "RELEASE_IMAGE=$RELEASE_IMAGE" >> "$GITHUB_ENV"
 
       - name: Set up QEMU
-        if: steps.release.outputs.skip != 'true'
         uses: docker/setup-qemu-action@v4
         with:
           platforms: arm
 
       - name: Set up Docker Buildx
-        if: steps.release.outputs.skip != 'true'
         uses: docker/setup-buildx-action@v4
 
       - name: Build ARMv7 image locally
-        if: steps.release.outputs.skip != 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -125,12 +46,8 @@ jobs:
           provenance: false
           sbom: false
           tags: ${{ env.LOCAL_IMAGE }}
-          build-args: |
-            GLUETUN_VERSION=${{ env.GLUETUN_TAG }}
-            EX4100_REVISION=${{ env.REVISION }}
 
-      - name: Smoke test EX4100 runtime
-        if: steps.release.outputs.skip != 'true'
+      - name: Smoke test runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -138,84 +55,23 @@ jobs:
           docker run --rm --platform linux/arm/v7 --entrypoint /bin/sh "$LOCAL_IMAGE" -c '
             set -eu
             grep -Fx "3.17.10" /etc/alpine-release
-            test -x /gluetun-entrypoint
-            test -x /usr/sbin/openvpn2.5
-            /usr/sbin/openvpn2.5 --version | head -n 1
-            iptables --version
+            test -x /usr/local/bin/entrypoint.sh
+            openvpn --version | head -n 1
+            ip --version
             iptables-legacy --version
           '
 
       - name: Log in to Docker Hub
-        if: steps.release.outputs.skip != 'true'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push validated image
-        if: steps.release.outputs.skip != 'true'
+      - name: Push image
         shell: bash
         run: |
           set -euo pipefail
           docker tag "$LOCAL_IMAGE" "$RELEASE_IMAGE"
-          docker tag "$LOCAL_IMAGE" "${DOCKERHUB_IMAGE}:latest-ex4100-armv7"
+          docker tag "$LOCAL_IMAGE" "$LATEST_IMAGE"
           docker push "$RELEASE_IMAGE"
-          docker push "${DOCKERHUB_IMAGE}:latest-ex4100-armv7"
-
-      - name: Promote validated image in stable stack
-        if: steps.release.outputs.skip != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin main
-          git reset --hard origin/main
-
-          python3 scripts/update-stable-version.py "$REPO_TAG"
-          git diff --check
-
-          grep -F "image: \${GLUETUN_IMAGE:-${RELEASE_IMAGE}}" compose/portainer-stack.yml
-          grep -Fx "GLUETUN_IMAGE=${RELEASE_IMAGE}" .env.example
-
-          if git diff --quiet; then
-            echo "Stable references already point to ${RELEASE_IMAGE}."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add compose/portainer-stack.yml .env.example README.md
-            git commit -m "Promote Gluetun ${GLUETUN_TAG} EX4100 image"
-            git push origin HEAD:main
-          fi
-
-      - name: Redeploy Portainer stack
-        if: steps.release.outputs.skip != 'true'
-        shell: bash
-        env:
-          PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
-        run: |
-          set -euo pipefail
-          if [ -n "${PORTAINER_WEBHOOK_URL:-}" ]; then
-            curl --fail --silent --show-error \
-              --request POST \
-              --retry 3 \
-              --retry-delay 5 \
-              "${PORTAINER_WEBHOOK_URL}"
-          else
-            echo "PORTAINER_WEBHOOK_URL is not configured; skipping redeploy."
-          fi
-
-      - name: Create repository tag
-        if: steps.release.outputs.skip != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch --tags --force
-
-          if git rev-parse -q --verify "refs/tags/${REPO_TAG}^{commit}" >/dev/null; then
-            echo "Repository tag ${REPO_TAG} already exists."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$REPO_TAG" -m "Gluetun ${GLUETUN_TAG} for WD EX4100 (${REVISION})"
-          git push origin "refs/tags/${REPO_TAG}"
+          docker push "$LATEST_IMAGE"
