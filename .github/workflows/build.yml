@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LOCAL_IMAGE: openvpn-ex4100:test
-      RELEASE_IMAGE: ovelayos/openvpn-ex4100:1.0.1
+      RELEASE_IMAGE: ovelayos/openvpn-ex4100:1.1.0
       LATEST_IMAGE: ovelayos/openvpn-ex4100:latest
 
     steps:
@@ -54,10 +54,11 @@ jobs:
           docker image inspect "$LOCAL_IMAGE" --format '{{.Architecture}}' | grep -q '^arm$'
           docker run --rm --platform linux/arm/v7 --entrypoint /bin/sh "$LOCAL_IMAGE" -c '
             set -eu
-            grep -Fx "3.17.10" /etc/alpine-release
+            test -f /etc/debian_version
             test -x /usr/local/bin/entrypoint.sh
             openvpn --version | head -n 1
             ip -V
+            iptables --version
             iptables-legacy --version
           '
 
