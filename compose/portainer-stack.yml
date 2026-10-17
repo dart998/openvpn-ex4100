@@ -20,4 +20,4 @@ services:
       LAN_SUBNET: ${LAN_SUBNET:-192.168.178.0/24}
 
     volumes:
-      - /mnt/HD/HD_a2/Public/openvpn-ex4100:/config:ro
+      - /mnt/HD/HD_a2/Public/openvpn-ex4100/config:/config:ro
