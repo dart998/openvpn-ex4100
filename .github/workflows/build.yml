@@ -13,15 +13,17 @@ on:
     - cron: "27 4 * * *"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
     env:
+      VERSION: 1.1.0
       LOCAL_IMAGE: openvpn-ex4100:test
       RELEASE_IMAGE: ovelayos/openvpn-ex4100:1.1.0
       LATEST_IMAGE: ovelayos/openvpn-ex4100:latest
+      RELEASE_TAG: v1.1.0
 
     steps:
       - name: Checkout
@@ -56,6 +58,8 @@ jobs:
             set -eu
             test -f /etc/debian_version
             test -x /usr/local/bin/entrypoint.sh
+            test -x /etc/openvpn/update-resolv-conf
+            command -v resolvconf
             openvpn --version | head -n 1
             ip -V
             iptables --version
@@ -76,3 +80,20 @@ jobs:
           docker tag "$LOCAL_IMAGE" "$LATEST_IMAGE"
           docker push "$RELEASE_IMAGE"
           docker push "$LATEST_IMAGE"
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "GitHub release $RELEASE_TAG already exists."
+            exit 0
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            --target "$GITHUB_SHA" \
+            --title "OpenVPN EX4100 $RELEASE_TAG" \
+            --notes "ARMv7 OpenVPN gateway for WD My Cloud EX4100.\n\nChanges in ${VERSION}:\n- Debian Bullseye runtime for compatibility with the EX4100.\n- Bullseye packages sourced from archive.debian.org.\n- Proton OpenVPN configuration is used unchanged.\n- Native update-resolv-conf support through openresolv.\n- Classic IPv4 routing only; no ip rule dependency.\n- iptables-legacy selected for the EX4100 kernel.\n\nDocker image: ${RELEASE_IMAGE}"
