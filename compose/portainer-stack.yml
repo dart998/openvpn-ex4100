@@ -1,10 +1,10 @@
 version: "2.4"
 
 services:
-  gluetun:
-    image: ${GLUETUN_IMAGE:-ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r2}
-    container_name: ${GLUETUN_CONTAINER_NAME:-gluetun-protonvpn}
-    hostname: ${GLUETUN_HOSTNAME:-gluetun-protonvpn}
+  openvpn:
+    image: ${OPENVPN_IMAGE:-ovelayos/openvpn-ex4100:1.0.0}
+    container_name: ${OPENVPN_CONTAINER_NAME:-openvpn-proton}
+    hostname: ${OPENVPN_HOSTNAME:-openvpn-proton}
     restart: unless-stopped
 
     cap_add:
@@ -15,15 +15,9 @@ services:
 
     environment:
       TZ: ${TZ:-Europe/Madrid}
-      VPN_SERVICE_PROVIDER: custom
-      VPN_TYPE: wireguard
-      WIREGUARD_IMPLEMENTATION: userspace
-      WIREGUARD_GSO: "off"
-      FIREWALL_OUTBOUND_SUBNETS: ${LAN_SUBNET:-192.168.178.0/24}
-      PPROF_ENABLED: "no"
-      PPROF_BLOCK_PROFILE_RATE: "0"
-      PPROF_MUTEX_PROFILE_RATE: "0"
-      PPROF_HTTP_SERVER_ADDRESS: ":6060"
+      OVPN_CONFIG: /config/client.ovpn
+      OVPN_AUTH: /config/auth.txt
+      LAN_SUBNET: ${LAN_SUBNET:-192.168.178.0/24}
 
     volumes:
-      - /mnt/HD/HD_a2/Public/gluetun/proton-es90.conf:/gluetun/wireguard/wg0.conf:ro
+      - /mnt/HD/HD_a2/Public/openvpn-ex4100:/config:ro
