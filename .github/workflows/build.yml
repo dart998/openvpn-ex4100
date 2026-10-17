@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LOCAL_IMAGE: openvpn-ex4100:test
-      RELEASE_IMAGE: ovelayos/openvpn-ex4100:1.0.0
+      RELEASE_IMAGE: ovelayos/openvpn-ex4100:1.0.1
       LATEST_IMAGE: ovelayos/openvpn-ex4100:latest
 
     steps:
