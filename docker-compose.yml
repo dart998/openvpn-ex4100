@@ -13,6 +13,9 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
 
+    security_opt:
+      - seccomp:unconfined
+
     environment:
       TZ: ${TZ:-Europe/Madrid}
       OVPN_CONFIG: /config/client.ovpn
