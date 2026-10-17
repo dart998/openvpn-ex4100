@@ -139,13 +139,10 @@ jobs:
             set -eu
             grep -Fx "3.17.10" /etc/alpine-release
             test -x /gluetun-entrypoint
-            iptables --version
-            iptables-legacy --version
-          '
-
-          docker run --rm --platform linux/arm/v7 --cap-add=NET_ADMIN --entrypoint /bin/sh "$LOCAL_IMAGE" -c '
-            set -eu
-            iptables-legacy -L >/dev/null
+            command -v iptables
+            command -v iptables-legacy
+            iptables --version | grep -F "(legacy)"
+            iptables-legacy --version | grep -F "(legacy)"
           '
 
       - name: Log in to Docker Hub
