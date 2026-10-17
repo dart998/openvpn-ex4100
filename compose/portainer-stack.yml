@@ -1,0 +1,25 @@
+version: "2.4"
+
+services:
+  gluetun:
+    image: ${GLUETUN_IMAGE:-ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r1}
+    container_name: ${GLUETUN_CONTAINER_NAME:-gluetun-protonvpn}
+    hostname: ${GLUETUN_HOSTNAME:-gluetun-protonvpn}
+    restart: unless-stopped
+
+    cap_add:
+      - NET_ADMIN
+
+    devices:
+      - /dev/net/tun:/dev/net/tun
+
+    environment:
+      TZ: ${TZ:-Europe/Madrid}
+      VPN_SERVICE_PROVIDER: custom
+      VPN_TYPE: wireguard
+      WIREGUARD_IMPLEMENTATION: userspace
+      WIREGUARD_GSO: "off"
+      FIREWALL_OUTBOUND_SUBNETS: ${LAN_SUBNET:-192.168.178.0/24}
+
+    volumes:
+      - ${WIREGUARD_CONFIG_PATH:-/mnt/HD/HD_a2/Public/gluetun/proton-es90.conf}:/gluetun/wireguard/wg0.conf:ro
