@@ -21,8 +21,8 @@ RUN set -eux; \
       ca-certificates \
       iproute2 \
       iptables \
+      openresolv \
       openvpn \
-      resolvconf \
       tini \
       tzdata; \
     update-alternatives --set iptables /usr/sbin/iptables-legacy; \
@@ -30,7 +30,7 @@ RUN set -eux; \
     update-ca-certificates; \
     mkdir -p /config; \
     test -x /etc/openvpn/update-resolv-conf; \
-    command -v resolvconf; \
+    test -x /sbin/resolvconf; \
     /usr/sbin/iptables --version; \
     /usr/sbin/iptables-legacy --version; \
     openvpn --version | head -n 1; \
