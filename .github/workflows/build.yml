@@ -57,7 +57,7 @@ jobs:
             grep -Fx "3.17.10" /etc/alpine-release
             test -x /usr/local/bin/entrypoint.sh
             openvpn --version | head -n 1
-            ip --version
+            ip -V
             iptables-legacy --version
           '
 
