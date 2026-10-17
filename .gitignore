@@ -1,5 +1,4 @@
 .env
-.env.*
-!.env.example
-*.conf
-!*.example.conf
+*.ovpn
+auth.txt
+config/
