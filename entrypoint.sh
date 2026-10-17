@@ -45,13 +45,14 @@ log "Ruta por defecto: gateway=$DEFAULT_GW interfaz=$DEFAULT_IF"
 log "LAN fuera de la VPN: $LAN_SUBNET"
 log "Configuración Proton sin modificar; resolvconf activo"
 
+# Mantener la LAN accesible por la interfaz Docker original antes de que
+# OpenVPN instale las rutas del túnel. iproute2 acepta CIDR directamente.
 ip -4 route replace "$LAN_SUBNET" via "$DEFAULT_GW" dev "$DEFAULT_IF"
 
 exec openvpn \
   --config "$OVPN_CONFIG" \
   --auth-user-pass "$OVPN_AUTH" \
   --auth-nocache \
-  --route "$LAN_SUBNET" net_gateway \
   --pull-filter ignore "route-ipv6" \
   --pull-filter ignore "ifconfig-ipv6" \
   --pull-filter ignore "redirect-gateway-ipv6"
