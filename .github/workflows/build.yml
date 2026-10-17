@@ -175,7 +175,6 @@ jobs:
           python3 scripts/update-stable-version.py "$REPO_TAG"
           git diff --check
 
-          grep -F "image: \${GLUETUN_IMAGE:-${RELEASE_IMAGE}}" docker-compose.yml
           grep -F "image: \${GLUETUN_IMAGE:-${RELEASE_IMAGE}}" compose/portainer-stack.yml
           grep -Fx "GLUETUN_IMAGE=${RELEASE_IMAGE}" .env.example
 
@@ -184,7 +183,7 @@ jobs:
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add docker-compose.yml compose/portainer-stack.yml .env.example README.md
+            git add compose/portainer-stack.yml .env.example README.md
             git commit -m "Promote Gluetun ${GLUETUN_TAG} EX4100 image"
             git push origin HEAD:main
           fi
