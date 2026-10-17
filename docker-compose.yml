@@ -20,6 +20,10 @@ services:
       WIREGUARD_IMPLEMENTATION: userspace
       WIREGUARD_GSO: "off"
       FIREWALL_OUTBOUND_SUBNETS: ${LAN_SUBNET:-192.168.178.0/24}
+      PPROF_ENABLED: "no"
+      PPROF_BLOCK_PROFILE_RATE: "0"
+      PPROF_MUTEX_PROFILE_RATE: "0"
+      PPROF_HTTP_SERVER_ADDRESS: ":6060"
 
     volumes:
       - /mnt/HD/HD_a2/Public/gluetun/proton-es90.conf:/gluetun/wireguard/wg0.conf:ro
