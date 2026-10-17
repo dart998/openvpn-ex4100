@@ -2,7 +2,7 @@
 
 ARG GLUETUN_VERSION=v3.41.3
 
-FROM --platform=linux/arm/v7 qmcgaw/gluetun:${GLUETUN_VERSION} AS upstream
+FROM --platform=$TARGETPLATFORM qmcgaw/gluetun:${GLUETUN_VERSION} AS upstream
 
 FROM alpine:3.17.10
 
@@ -17,7 +17,6 @@ LABEL org.opencontainers.image.title="Gluetun for WD My Cloud EX4100" \
 RUN apk add --no-cache \
       ca-certificates \
       iptables \
-      iptables-legacy \
       openvpn \
       tzdata \
     && update-ca-certificates \
