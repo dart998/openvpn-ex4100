@@ -2,7 +2,7 @@ version: "2.4"
 
 services:
   gluetun:
-    image: ${GLUETUN_IMAGE:-ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r1}
+    image: ${GLUETUN_IMAGE:-ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r2}
     container_name: ${GLUETUN_CONTAINER_NAME:-gluetun-protonvpn}
     hostname: ${GLUETUN_HOSTNAME:-gluetun-protonvpn}
     restart: unless-stopped
