@@ -6,7 +6,7 @@ Diseñado para funcionar en el kernel limitado del EX4100 sin depender de `ip ru
 
 ## Características
 
-- Alpine 3.17.10
+- Debian Bullseye
 - OpenVPN 2.5.x
 - ARMv7
 - `/dev/net/tun`
@@ -20,7 +20,7 @@ Diseñado para funcionar en el kernel limitado del EX4100 sin depender de `ip ru
 Crear:
 
 ```text
-/mnt/HD/HD_a2/Public/openvpn-ex4100/
+/mnt/HD/HD_a2/Public/openvpn-ex4100/config/
 ```
 
 Dentro:
@@ -43,16 +43,16 @@ No usar las credenciales normales de la cuenta Proton; usar las credenciales esp
 
 ## Portainer
 
-Usar el stack:
+El stack principal está en la raíz del repositorio:
 
 ```text
-compose/portainer-stack.yml
+docker-compose.yml
 ```
 
 La imagen por defecto es:
 
 ```text
-ovelayos/openvpn-ex4100:1.0.0
+ovelayos/openvpn-ex4100:1.1.0
 ```
 
 ## Compartir la VPN con otro contenedor
