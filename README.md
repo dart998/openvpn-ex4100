@@ -14,7 +14,7 @@ Custom ARMv7 Gluetun image for WD My Cloud EX4100 systems where the official ima
 
 The image takes the statically built Gluetun entrypoint from the selected upstream stable release and runs it on Alpine `3.17.10` with the older iptables/iptables-legacy userspace known to be compatible with this NAS generation.
 
-Current stable image: `ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r1`
+Current stable image: `ovelayos/gluetun-wd-ex4100:3.41.3-ex4100-r2`
 
 ## Portainer
 
